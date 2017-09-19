@@ -1,0 +1,180 @@
+#include <stdio.h>
+#include <math.h>
+
+#define max(a,b) a>b ? a : b
+
+int main(void)
+{
+	int T = 0;
+	int T_RESULT[51] = { 0 };
+
+	scanf("%d", &T);
+
+	for (int t = 0; t < T; t++)
+	{
+		int ROOM[11][11] = { 0 };
+		int POSITION[11][2] = { 0 };
+		int POS_ROOM[11][2] = { 0 };
+		int TIME[11][2] = { 0 };
+		int RESULT_TIME[1024] = { 0 };
+		int TIME_ROOM[2] = { 0 };
+
+		int MID[11] = { 0 };
+		int MID_Lo[11] = { 0 };
+		
+		int DP[10][2] = { 0 };
+		int MIN_TIME[10][2] = { 0 };
+
+		int N = 0;
+		int temp_room = 0;
+		int peo_cnt = 0; //사람 수
+		int room_cnt = 0; // 방 수
+		int case_cnt = 0; //총 경우의 수
+		int answer = 0;
+
+		scanf("%d", &N);
+
+		for (int i = 0; i < N; i++)
+		{
+			for (int j = 0; j < N; j++)
+			{
+				scanf("%d", &temp_room);
+				ROOM[i][j] = temp_room;
+
+				if (temp_room == 1)
+				{
+					POSITION[peo_cnt][0] = j;
+					POSITION[peo_cnt][1] = i;
+					peo_cnt++;
+				}
+
+				if (temp_room != 0 && temp_room != 1)
+				{
+					POS_ROOM[room_cnt][0] = j;
+					POS_ROOM[room_cnt][1] = i;
+					TIME_ROOM[room_cnt] = temp_room;
+					room_cnt++;
+
+				}
+			}
+		}
+
+		case_cnt = pow(2, peo_cnt);
+
+		for (int i = 0; i < peo_cnt; i++)
+		{
+			TIME[i][0] = abs(POSITION[i][0] - POS_ROOM[0][0]) + abs(POSITION[i][1] - POS_ROOM[0][1]);
+			TIME[i][1] = abs(POSITION[i][0] - POS_ROOM[1][0]) + abs(POSITION[i][1] - POS_ROOM[1][1]);
+		}
+
+		for (int i = 0; i < case_cnt; i++)
+		{
+			int temp_value = 0;
+			int temp_remainder = 0;
+			int temp_x = 0;
+			int temp_case = i;
+
+			temp_value = i / 2;
+			temp_remainder = i % 2;
+
+			for (int j = peo_cnt - 1; j >= 0; j--)
+			{
+				temp_x = temp_case / (pow(2, j));
+
+				if (temp_x != 0)
+				{
+					temp_case = temp_case % (int)(pow(2, j));
+					MID[j] = TIME[j][1];
+					MID_Lo[j] = 1;
+				}
+				else
+				{
+					MID[j] = TIME[j][0];
+					MID_Lo[j] = 0;
+				}
+			}
+
+			//로직 시작
+			int time;
+			int stair_cnt_0 = 0, stair_cnt_1 = 0;
+			int var_temp = 0;
+			int STAIR[10001][2] = { 0 };
+			int time_0 = 0, time_1 = 0;
+
+			for (int x = 0; x < peo_cnt - 1; x++)
+			{
+				for (int y = x + 1; y < peo_cnt; y++)
+				{
+					if (MID[y] < MID[x])
+					{
+						var_temp = MID[x];
+						MID[x] = MID[y];
+						MID[y] = var_temp;
+
+						var_temp = MID_Lo[x];
+						MID_Lo[x] = MID_Lo[y];
+						MID_Lo[y] = var_temp;
+					}
+				}
+			}
+
+			for (int p = 0; p < peo_cnt; p++)
+			{
+				int chk = 0;
+
+				if (MID_Lo[p] == 0)
+				{
+					for (int q = 1; q <= TIME_ROOM[0]; q++)
+					{
+						while (STAIR[MID[p] + q + chk][0] >= 3)
+						{
+							chk++;
+						}
+						STAIR[MID[p] + q + chk][0]++;
+
+						if (MID[p] + q + chk > time_0)
+						{
+							time_0 = MID[p] + q + chk;
+						}
+					}
+				}
+				else
+				{
+					for (int q = 1; q <= TIME_ROOM[1]; q++)
+					{
+						while (STAIR[MID[p] + q + chk][1] >= 3)
+						{
+							chk++;
+						}
+						STAIR[MID[p] + q + chk][1]++;
+
+						if (MID[p] + q + chk > time_1)
+						{
+							time_1 = MID[p] + q + chk;
+						}
+					}
+				}
+			}
+
+			RESULT_TIME[i] = max(time_0, time_1);
+		}
+
+		answer = RESULT_TIME[0];
+
+		for (int i = 1; i < case_cnt; i++)
+		{
+			if (RESULT_TIME[i] < answer)
+			{
+				answer = RESULT_TIME[i];
+			}
+		}
+
+		T_RESULT[t] = answer + 1;
+	}
+
+	for (int i = 0; i < T; i++)
+	{
+		printf("#%d %d\n", i + 1, T_RESULT[i]);
+	}
+
+}
